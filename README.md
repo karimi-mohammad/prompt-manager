@@ -1,6 +1,8 @@
 # Prompt Manager
 
-An offline-first desktop app to manage, organize, and reuse AI prompts. Built with Electron + Vanilla JS.
+Offline Markdown-based AI prompt manager built with Electron + Vanilla JS.
+
+> **Note:** This is a personal hobby project — built for fun, not a production-grade tool. It was developed entirely with [Claude Code](https://claude.ai/claude-code) as an experiment in AI-assisted development.
 
 **Core philosophy:** Markdown = Source of Truth. Your prompts are plain `.md` files — no database, no lock-in, no cloud required.
 
@@ -13,11 +15,18 @@ npm start
 
 On first launch, choose a folder for your prompt library. Sample prompts are seeded automatically.
 
+## Download
+
+Download the latest release from [Releases](../../releases):
+
+- **Installer** (`Prompt Manager Setup 1.0.0.exe`) — standard Windows installer
+- **Portable** (`win-unpacked/`) — unzip and run, no installation needed
+
 ## Features
 
-### Core (Phase 1)
+### Core
 - **Markdown storage** — each prompt is a `.md` file with YAML front matter
-- **Categories** — organize prompts into folders
+- **Categories** — hierarchical folder-based organization
 - **Tags** — add multiple tags per prompt
 - **Favorites** — star your most-used prompts
 - **Fuzzy search** — find prompts fast (Ctrl+K)
@@ -27,15 +36,14 @@ On first launch, choose a folder for your prompt library. Sample prompts are see
 - **Backup** — create timestamped ZIP backups of your library
 - **Drag & Drop** — drop `.md` files onto the window to import
 - **Markdown preview** — rendered preview with DOMPurify sanitization
-- **Keyboard shortcuts** — Ctrl+K (search), Ctrl+N (new), Esc (close)
 
-### Productivity (Phase 2)
+### Productivity
 - **History** — track every prompt run with timestamps and variable values
 - **Re-run** — replay any history entry with pre-filled variables
-- **Command Palette** — Ctrl+Shift+P for quick access to all commands and prompts
-- **Snippets** — reusable text blocks stored as `.md` files in your library
+- **Command Palette** — Ctrl+Shift+P for quick access to all commands
+- **Snippets** — reusable text blocks stored as `.md` files
 
-### Power User (Phase 3)
+### Power User
 - **Versioning** — auto-saved version snapshots on every edit, view diff, restore
 - **Variants** — save run results as named variants of a prompt
 - **Composition** — combine multiple prompts and snippets into one
@@ -48,6 +56,21 @@ On first launch, choose a folder for your prompt library. Sample prompts are see
 | `Ctrl+N` | New prompt |
 | `Ctrl+Shift+P` | Command Palette |
 | `Esc` | Close modal / cancel |
+
+## Variable System
+
+Define variables with `{name}` syntax in your prompts. The app auto-detects them.
+
+Supported variable types:
+- **text** — single-line input
+- **textarea** — multi-line input
+- **select** — dropdown with predefined options
+
+Variables can have:
+- `default` — pre-filled value
+- `required` — must not be empty to generate
+
+Escape variables with backslash: `\{notavar\}`
 
 ## Prompt File Format
 
@@ -79,21 +102,6 @@ Review the following {language} code.
 
 {code}
 ```
-
-## Variable System
-
-Define variables with `{name}` syntax in your prompts. The app auto-detects them.
-
-Supported variable types:
-- **text** — single-line input
-- **textarea** — multi-line input
-- **select** — dropdown with predefined options
-
-Variables can have:
-- `default` — pre-filled value
-- `required` — must not be empty to generate
-
-Escape variables with backslash: `\{notavar\}`
 
 ## Library Structure
 
