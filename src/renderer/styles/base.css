@@ -1,0 +1,115 @@
+/* === Reset & Design Tokens === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Colors — Dark theme */
+  --bg-primary:    #1a1b26;
+  --bg-secondary:  #24283b;
+  --bg-tertiary:   #2f3349;
+  --bg-hover:      #3b3f5c;
+  --bg-active:     #444b6a;
+
+  --text-primary:    #c0caf5;
+  --text-secondary:  #a9b1d6;
+  --text-muted:      #565f89;
+  --text-inverse:    #1a1b26;
+
+  --accent:          #7aa2f7;
+  --accent-hover:    #89b4fa;
+  --accent-muted:    rgba(122, 162, 247, 0.15);
+
+  --success:         #9ece6a;
+  --warning:         #e0af68;
+  --danger:          #f7768e;
+  --danger-hover:    #ff8aa0;
+
+  --border:          #3b4261;
+  --border-light:    #2f3349;
+  --border-focus:    #7aa2f7;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg:  0 8px 24px rgba(0,0,0,0.5);
+
+  /* Typography */
+  --font-sans:  'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.8125rem;
+  --fs-base: 0.875rem;
+  --fs-md:   1rem;
+  --fs-lg:   1.125rem;
+  --fs-xl:   1.375rem;
+  --fs-2xl:  1.75rem;
+
+  --fw-normal:  400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  /* Spacing */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+
+  /* Radius */
+  --r-sm:  4px;
+  --r-md:  6px;
+  --r-lg:  8px;
+  --r-xl:  12px;
+  --r-full:9999px;
+
+  /* Transitions */
+  --t-fast:   0.1s ease;
+  --t-normal: 0.2s ease;
+  --t-slow:   0.3s ease;
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --list-width:    320px;
+  --header-height: 56px;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-active);
+  border-radius: var(--r-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}

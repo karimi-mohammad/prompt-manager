@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7aa2f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3d59a1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c0caf5;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#c0caf5;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="url(#bg)"/>
+  <rect x="32" y="32" width="448" height="224" rx="96" ry="96" fill="url(#shine)"/>
+  <!-- Document/page icon -->
+  <g transform="translate(128, 72)">
+    <!-- Page body -->
+    <path d="M40,0 L200,0 C222,0 240,18 240,40 L240,280 C240,302 222,320 200,320 L100,320 L40,380 L40,320 C18,320 0,302 0,280 L0,40 C0,18 18,0 40,0 Z" fill="#1a1b26" opacity="0.9"/>
+    <!-- Page fold -->
+    <path d="M160,0 L160,60 C160,82 178,100 200,100 L240,100 L240,40 C240,18 222,0 200,0 Z" fill="#3b4261"/>
+    <!-- Lines of text -->
+    <rect x="36" y="130" width="140" height="12" rx="6" fill="#7aa2f7"/>
+    <rect x="36" y="160" width="120" height="12" rx="6" fill="#7aa2f7" opacity="0.7"/>
+    <rect x="36" y="190" width="160" height="12" rx="6" fill="#7aa2f7" opacity="0.5"/>
+    <!-- Variable brackets { } -->
+    <text x="200" y="225" font-family="monospace" font-size="36" font-weight="bold" fill="#e0af68" opacity="0.9">{ }</text>
+  </g>
+</svg>

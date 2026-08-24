@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Prompt Manager</title>
+  <link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header / Search -->
+    <header class="header">
+      <div class="header__logo">
+        <span>📋</span>
+        <span>Prompt Manager</span>
+      </div>
+      <div class="header__search">
+        <input type="text" class="input input--search" id="global-search" placeholder="Search prompts... (Ctrl+K)">
+      </div>
+      <div class="header__actions">
+        <button class="btn btn--secondary btn--sm" id="btn-import" title="Import .md files">📥 Import</button>
+        <button class="btn btn--secondary btn--sm" id="btn-export" title="Export / Backup">📤 Export</button>
+        <button class="btn btn--primary btn--sm" id="btn-new-prompt">+ New Prompt</button>
+      </div>
+    </header>
+
+    <!-- Main 3-column layout -->
+    <div class="main">
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar__section">
+          <div class="sidebar__item sidebar__item--active" data-view="all">
+            <span class="sidebar__item-icon">📄</span>
+            <span class="sidebar__item-label">All Prompts</span>
+            <span class="sidebar__item-count" id="count-all">0</span>
+          </div>
+          <div class="sidebar__item" data-view="favorites">
+            <span class="sidebar__item-icon">⭐</span>
+            <span class="sidebar__item-label">Favorites</span>
+            <span class="sidebar__item-count" id="count-fav">0</span>
+          </div>
+          <div class="sidebar__item" data-view="history">
+            <span class="sidebar__item-icon">🕒</span>
+            <span class="sidebar__item-label">History</span>
+            <span class="sidebar__item-count" id="count-history">0</span>
+          </div>
+        </div>
+
+        <div class="sidebar__section">
+          <div class="sidebar__label">Categories</div>
+          <div id="categories-list">
+            <!-- dynamically filled -->
+          </div>
+        </div>
+
+        <div class="sidebar__section">
+          <div class="sidebar__label">Snippets</div>
+          <div id="snippets-list">
+            <!-- dynamically filled -->
+          </div>
+        </div>
+
+        <div class="sidebar__section" style="margin-top:auto; border-top:1px solid var(--border-light);">
+          <div class="sidebar__item" data-view="settings" id="btn-settings">
+            <span class="sidebar__item-icon">⚙️</span>
+            <span class="sidebar__item-label">Settings</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- List panel -->
+      <div class="list-panel">
+        <div class="list-panel__header">
+          <span class="list-panel__title" id="list-title">All Prompts</span>
+          <span class="list-panel__sort" id="list-sort" title="Sort">↕ Name</span>
+        </div>
+        <div class="list-panel__items" id="prompt-list">
+          <!-- dynamically filled -->
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="detail-panel" id="detail-panel">
+        <div class="detail-panel__empty" id="detail-empty">
+          <div class="detail-panel__empty-icon">📋</div>
+          <div class="detail-panel__empty-text">Select a prompt</div>
+          <div class="detail-panel__empty-hint">Click a prompt from the list, or create a new one</div>
+        </div>
+
+        <div id="detail-content" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+          <div class="detail-tabs">
+            <button class="detail-tab detail-tab--active" data-tab="preview">Preview</button>
+            <button class="detail-tab" data-tab="edit">Edit</button>
+            <button class="detail-tab" data-tab="run">Run</button>
+            <button class="detail-tab" data-tab="versions">Versions</button>
+            <button class="detail-tab" data-tab="variants">Variants</button>
+          </div>
+          <div class="detail-content" id="tab-content">
+            <!-- dynamically filled by JS modules -->
+          </div>
+          <div class="detail-actions" id="detail-actions">
+            <button class="btn btn--primary" id="btn-run">▶ Run</button>
+            <button class="btn btn--secondary" id="btn-copy">📋 Copy</button>
+            <button class="btn btn--ghost" id="btn-fav-toggle">☆</button>
+            <div style="flex:1"></div>
+            <button class="btn btn--danger btn--sm" id="btn-delete">🗑 Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Onboarding (hidden by default) -->
+    <div class="onboarding" id="onboarding" style="display:none">
+      <div class="onboarding__card">
+        <div class="onboarding__icon">📋</div>
+        <div class="onboarding__title">Welcome to Prompt Manager</div>
+        <div class="onboarding__desc">
+          Choose where to store your prompts. Your prompts are saved as Markdown files — no database, no lock-in.
+        </div>
+        <div class="onboarding__actions">
+          <button class="btn btn--primary btn--lg btn--block" id="btn-default-location">
+            📁 Use Default Location (Documents/PromptManager)
+          </button>
+          <button class="btn btn--secondary btn--lg btn--block" id="btn-choose-location">
+            📂 Choose Custom Folder
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal-overlay" id="modal-delete">
+      <div class="modal" style="max-width:400px">
+        <div class="modal__header">
+          <span class="modal__title">Delete Prompt</span>
+          <button class="modal__close" data-close-modal="modal-delete">&times;</button>
+        </div>
+        <div class="modal__body">
+          <p>Are you sure you want to delete <strong id="delete-prompt-name"></strong>?</p>
+          <p style="color:var(--text-muted); font-size:var(--fs-sm); margin-top:var(--sp-2);">This will permanently delete the file from disk.</p>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--secondary" data-close-modal="modal-delete">Cancel</button>
+          <button class="btn btn--danger" id="btn-confirm-delete">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Prompt Modal -->
+    <div class="modal-overlay" id="modal-new-prompt">
+      <div class="modal">
+        <div class="modal__header">
+          <span class="modal__title">New Prompt</span>
+          <button class="modal__close" data-close-modal="modal-new-prompt">&times;</button>
+        </div>
+        <div class="modal__body">
+          <div class="form-group">
+            <label class="form-label form-label--required">Title</label>
+            <input type="text" class="input" id="new-prompt-title" placeholder="e.g. Code Reviewer">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" class="input" id="new-prompt-desc" placeholder="Short description...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="select" id="new-prompt-category" style="width:100%">
+              <option value="uncategorized">— Uncategorized —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags</label>
+            <input type="text" class="input" id="new-prompt-tags" placeholder="comma-separated tags">
+            <div class="form-hint">Separate with commas, e.g. javascript, debugging</div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--secondary" data-close-modal="modal-new-prompt">Cancel</button>
+          <button class="btn btn--primary" id="btn-confirm-new-prompt">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Category Modal -->
+    <div class="modal-overlay" id="modal-new-category">
+      <div class="modal" style="max-width:400px">
+        <div class="modal__header">
+          <span class="modal__title">New Category</span>
+          <button class="modal__close" data-close-modal="modal-new-category">&times;</button>
+        </div>
+        <div class="modal__body">
+          <div class="form-group">
+            <label class="form-label">Parent Category (optional)</label>
+            <select class="select" id="new-cat-parent" style="width:100%">
+              <option value="">— None (root level) —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label form-label--required">Category Name</label>
+            <input type="text" class="input" id="new-cat-name" placeholder="e.g. javascript">
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--secondary" data-close-modal="modal-new-category">Cancel</button>
+          <button class="btn btn--primary" id="btn-confirm-new-category">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sort dropdown (positioned near sort button) -->
+    <div class="modal-overlay" id="modal-sort" style="background:transparent;">
+      <div class="modal" id="sort-dropdown" style="max-width:200px; position:absolute; top:0; left:0;">
+        <div class="modal__body" style="padding:var(--sp-2)">
+          <div class="sidebar__item" data-sort="name">Name</div>
+          <div class="sidebar__item" data-sort="created">Created Date</div>
+          <div class="sidebar__item" data-sort="updated">Updated Date</div>
+          <div class="sidebar__item" data-sort="favorite">Favorites First</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export / Import Modal -->
+    <div class="modal-overlay" id="modal-export">
+      <div class="modal" style="max-width:360px">
+        <div class="modal__header">
+          <span class="modal__title">Import / Export</span>
+          <button class="modal__close" data-close-modal="modal-export">&times;</button>
+        </div>
+        <div class="modal__body" style="display:flex; flex-direction:column; gap:var(--sp-3);">
+          <div class="sidebar__item" data-action="import-files">
+            <span class="sidebar__item-icon">📄</span>
+            <span class="sidebar__item-label">Import .md files</span>
+          </div>
+          <div class="sidebar__item" data-action="import-folder">
+            <span class="sidebar__item-icon">📁</span>
+            <span class="sidebar__item-label">Import folder</span>
+          </div>
+          <hr style="border:none; border-top:1px solid var(--border-light);">
+          <div class="sidebar__item" data-action="export-current">
+            <span class="sidebar__item-icon">📋</span>
+            <span class="sidebar__item-label">Export current prompt</span>
+          </div>
+          <div class="sidebar__item" data-action="export-library">
+            <span class="sidebar__item-icon">📦</span>
+            <span class="sidebar__item-label">Export library (ZIP)</span>
+          </div>
+          <div class="sidebar__item" data-action="backup-library">
+            <span class="sidebar__item-icon">💾</span>
+            <span class="sidebar__item-label">Backup library (ZIP)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Drag & drop overlay -->
+    <div id="drop-overlay" style="display:none; position:fixed; inset:0; background:rgba(122,162,247,0.1); z-index:5000; border:3px dashed var(--accent); pointer-events:none;"></div>
+
+    <!-- Command Palette (Ctrl+Shift+P) -->
+    <div class="modal-overlay" id="modal-command-palette">
+      <div class="modal" style="max-width:520px">
+        <div class="modal__body" style="padding:var(--sp-3)">
+          <input type="text" class="input" id="cmd-palette-search" placeholder="Type a command..." style="margin-bottom:var(--sp-3)">
+          <div id="cmd-palette-list" style="max-height:320px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Composition Modal -->
+    <div class="modal-overlay" id="modal-compose">
+      <div class="modal" style="max-width:600px">
+        <div class="modal__header">
+          <span class="modal__title">Compose Prompts</span>
+          <button class="modal__close" data-close-modal="modal-compose">&times;</button>
+        </div>
+        <div class="modal__body">
+          <p style="font-size:var(--fs-sm); color:var(--text-secondary); margin-bottom:var(--sp-3);">
+            Select prompts and snippets to combine into one. They will be joined in order.
+          </p>
+          <div id="compose-available" style="max-height:240px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--r-md); padding:var(--sp-2); margin-bottom:var(--sp-3);"></div>
+          <div style="font-size:var(--fs-xs); color:var(--text-muted); margin-bottom:var(--sp-2);">Selected (in order):</div>
+          <div id="compose-selected" style="min-height:48px; border:1px dashed var(--border); border-radius:var(--r-md); padding:var(--sp-2); margin-bottom:var(--sp-3);"></div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--secondary" data-close-modal="modal-compose">Cancel</button>
+          <button class="btn btn--primary" id="btn-do-compose">🔗 Compose</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor libs (loaded as globals) -->
+  <script src="vendor/purify.min.js"></script>
+  <script src="vendor/js-yaml.min.js"></script>
+  <script src="vendor/marked.min.js"></script>
+
+  <!-- App entry point -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

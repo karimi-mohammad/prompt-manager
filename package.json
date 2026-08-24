@@ -1,0 +1,67 @@
+{
+  "name": "prompt-manager",
+  "version": "1.0.0",
+  "description": "Offline Markdown-based AI prompt manager — store, organize, and reuse your prompts as plain .md files",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir",
+    "convert-icon": "node scripts/convert-icon.js"
+  },
+  "build": {
+    "appId": "com.promptmanager.app",
+    "productName": "Prompt Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "samples/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "keywords": [
+    "electron",
+    "prompts",
+    "markdown",
+    "ai",
+    "prompt-manager",
+    "offline"
+  ],
+  "author": "Mohammad Karimi",
+  "license": "MIT",
+  "homepage": "https://github.com/mkarimi/prompt-manager#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkarimi/prompt-manager.git"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "sharp": "^0.35.3"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "js-yaml": "^5.3.0"
+  }
+}
