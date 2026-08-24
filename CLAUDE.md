@@ -1,165 +1,114 @@
-# Prompt Manager — Project Context
+# CLAUDE.md
 
-## What This Is
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Offline Markdown-based AI prompt manager. Desktop app built with Electron + Vanilla JS.
-Personal hobby project — built with Claude Code as an experiment in AI-assisted development.
+## Project Overview
 
-**Core philosophy:** Markdown = Source of Truth. Prompts are plain `.md` files with YAML front matter. No database, no lock-in, no cloud.
+Prompt Manager — offline Markdown-based AI prompt manager. Electron 33 + Vanilla JS (no TypeScript, no bundler, no framework). Personal hobby project built with Claude Code.
 
-## Tech Stack
+Core philosophy: Markdown = Source of Truth. Each prompt is a `.md` file with YAML front matter. No database, no lock-in.
 
-- **Electron 33** — desktop runtime
-- **Vanilla JS (ES modules)** — no React/Vue/TypeScript, no build step, no bundler
-- **CSS custom properties** — dark theme (Tokyo Night inspired)
-- **Vendored libs** — marked.js, js-yaml, DOMPurify (loaded as `<script>` globals in renderer)
-- **Runtime deps:** adm-zip (backup/zip), js-yaml (front matter)
-- **Dev deps:** electron, electron-builder, sharp (icon conversion)
-
-## Project Structure
-
-```
-src/
-├── main/                    # Electron main process (Node.js)
-│   ├── main.js              # Window creation, IPC registration, lifecycle
-│   ├── ipc.js               # (unused — handlers are in main.js)
-│   ├── settings.js          # Settings persistence in app.getPath('userData')
-│   ├── library.js           # Scan, CRUD, category tree, import files
-│   ├── frontmatter.js       # YAML parse/serialize with round-trip preservation
-│   ├── history.js           # Usage history (JSON in userData)
-│   ├── snippets.js          # Reusable text blocks (.md in library/snippets/)
-│   ├── variants.js          # Prompt variants (.md in __variants/ per prompt)
-│   ├── versions.js          # Version snapshots + diff (JSON+md in __versions/)
-│   ├── backup.js            # ZIP export/backup via adm-zip
-│   └── watcher.js           # fs.watch recursive + debounce → renderer events
-├── preload/
-│   └── preload.js           # contextBridge: exposes window.api to renderer
-└── renderer/
-    ├── index.html           # 3-column layout + modals
-    ├── styles/
-    │   ├── base.css         # Reset, design tokens, dark theme
-    │   ├── layout.css       # Grid: sidebar / list / detail
-    │   └── components.css   # Buttons, inputs, modals, toasts, tags
-    ├── js/
-    │   ├── app.js           # Main entry: init, UI wiring, all render functions
-    │   ├── store.js         # Simple state + pub/sub
-    │   ├── api.js           # Thin wrapper: `window.api`
-    │   ├── fuzzy.js         # Subsequence fuzzy search scorer
-    │   ├── variables.js     # Detect/merge/replace {variables}
-    │   └── markdown.js      # Render via marked + sanitize via DOMPurify
-    └── vendor/              # Vendored libs (loaded as globals)
-        ├── marked.min.js
-        ├── js-yaml.min.js
-        └── purify.min.js
-```
-
-## Architecture Decisions
-
-- **Main process does all fs work** — renderer never touches filesystem directly
-- **IPC via contextBridge** — contextIsolation: true, nodeIntegration: false
-- **State in renderer** — simple pub/sub store (store.js), no framework
-- **Security:** DOMPurify sanitizes all markdown output to prevent XSS
-- **No bundler** — ES modules via `<script type="module">`, vendor libs as `<script>` globals
-- **Categories = folders** — changing category moves the file on disk
-- **History/stats outside library** — stored in userData, not in prompt files
-- **fs.watch for sync** — debounced 500ms, emits 'library-changed' to renderer
-
-## Key Algorithms
-
-### Variable Detection
-```
-/(?<!\\)\{([a-zA-Z_][a-zA-Z0-9_-]*)\}/g
-```
-- Escape-aware: `\{text\}` is NOT a variable
-- Deduplicated preserving order
-- Merged with YAML metadata (type/default/required/options)
-
-### Fuzzy Search
-- Subsequence matching, case-insensitive
-- Scoring: +10 per char, +8 consecutive, +5 word-start, +2 exact case
-- Searches: title (1.5x weight), description, category, tags
-
-### Category Tree
-- Built from flat `{ path: count }` map
-- Ancestors auto-created from child paths (e.g. `coding/frontend` creates `coding`)
-- Empty folders included (count=0)
-
-## Build & Release
+## Commands
 
 ```bash
-npm start              # Run locally
-npm run dev            # Run with DevTools
-npm run build          # Build installer + portable (local)
-node scripts/build.js  # Full optimized build with cleanup
+npm install            # Install dependencies
+npm start              # Run the app
+npm run dev            # Run with DevTools open
+npm run build          # Build NSIS installer + unpacked dir
+node scripts/build.js  # Full optimized build (cleans unnecessary Electron files, creates portable zip)
+node scripts/convert-icon.js  # Convert assets/icon.svg → icon.ico + icon.png
 ```
 
-### GitHub Actions
-- **On push/PR:** builds, uploads artifacts (7-day retention)
-- **On tag push (v*):** auto-creates GitHub Release with installer + portable
-
+**Release workflow:**
 ```bash
-git tag v1.1.0
-git push origin v1.1.0
-# → GitHub Actions builds + creates release automatically
+git tag v1.1.0 && git push origin v1.1.0
+# GitHub Actions auto-builds and creates a GitHub Release with installer + portable zip
 ```
 
-### Build Optimization
-Post-build cleanup removes:
-- 54 locale files (keep en-US.pak only)
-- GPU libs: libGLESv2.dll, libEGL.dll, vk_swiftshader.dll, d3dcompiler_47.dll
-- Media: ffmpeg.dll
-- Other: LICENSES.chromium.html, chrome_200_percent.pak
+No linter, no tests, no formatter configured.
 
-Result: Installer ~78MB, Portable ZIP ~90MB
+## Architecture
 
-## File Format
+**Two-process Electron model:**
 
-Each prompt is a `.md` file with YAML front matter:
+- **Main process** (`src/main/`) — does ALL filesystem work, exposes IPC handlers via `ipcMain.handle()`
+- **Renderer** (`src/renderer/`) — pure UI, accesses fs only through `window.api.*` (contextBridge)
+- **Preload** (`src/preload/preload.js`) — bridges main↔renderer with `contextBridge.exposeInMainWorld('api', {...})`
 
-```yaml
----
-title: Code Reviewer
-description: Review source code for bugs
-category: coding          # = folder name; changing moves file
-tags: [coding, review]
-favorite: true
-created: 2026-08-23T10:00:00.000Z
-updated: 2026-08-23T12:00:00.000Z
-variables:
-  - name: language
-    type: text            # text | textarea | select
-    default: JavaScript
-    required: true
----
-Body with {language} and {code} variables.
+`contextIsolation: true`, `nodeIntegration: false` — renderer has zero Node.js access.
+
+**Renderer state:** Simple pub/sub store (`store.js`), no Redux/Vue/etc. UI modules in `src/renderer/js/` import each other directly as ES modules (`<script type="module">`).
+
+**Vendor libs** (marked.js, js-yaml, DOMPurify) are vendored in `src/renderer/vendor/` and loaded as `<script>` globals before the module entry point.
+
+**Data flow:**
+```
+Renderer UI → window.api.someMethod() → IPC → main process handler → fs operations → returns data
 ```
 
-## IPC API Surface
+**Library watcher:** `src/main/watcher.js` uses `fs.watch({recursive: true})` with 500ms debounce, sends `library-changed` event to renderer for live sync with external editors.
 
-All methods exposed via `window.api` (contextBridge):
+## Key Patterns
 
-**Settings:** getSettings, chooseLibraryFolder, setLibraryPath
-**Library:** scanLibrary, savePrompt, deletePrompt, toggleFavorite, createCategory
-**Import/Export:** importFiles, importFolder, importDropped, exportPrompt, exportLibrary, backupLibrary
-**History:** logRun, getHistory, deleteHistoryEntry, clearHistory
-**Snippets:** listSnippets, getSnippet, saveSnippet, deleteSnippet
-**Variants:** listVariants, saveVariant, deleteVariant
-**Versions:** listVersions, getVersionContent, restoreVersion, computeDiff
-**Composition:** composePrompts
-**Events:** onLibraryChanged (main → renderer)
+**Front matter round-trip** (`src/main/frontmatter.js`):
+- `parseFrontMatter()` → `{meta, body, rawMeta}`
+- `serializeFrontMatter(meta, body)` → preserves unknown YAML keys
+- Malformed YAML → prompt loads with title=filename, body=full text (never auto-overwrites)
 
-## Important Patterns
+**Category = folder path.** Changing `category` in YAML moves the `.md` file between folders. `slugify()` handles Windows-illegal chars `[\\/:*?"<>|]` → `-`. Empty categories are shown (scan walks all folders, not just those with prompts).
 
-- `escHtml()` used everywhere in template literals to prevent XSS
-- `renderMarkdown()` always goes through DOMPurify.sanitize()
-- Front matter round-trip preserves unknown YAML keys
-- Category slugify: `[\\/:*?"<>|]` → `-`, collision → suffix `-2`, `-3`
-- CRLF normalized: reads use `.replace(/\r\n/g, '\n')`, writes use `\n`
+**Variable engine** (`src/renderer/js/variables.js`):
+- Regex: `/(?<!\\)\{([a-zA-Z_][a-zA-Z0-9_-]*)\}/g`
+- `\{escaped\}` is NOT a variable (lookbehind)
+- Duplicate `{name}` in body → single input field
+- Merges detected vars with YAML metadata (type/default/required/options)
 
-## Known Limitations
+**Security:** All markdown output goes through `DOMPurify.sanitize()`. All user data in template literals uses `escHtml()`. No `innerHTML` with raw user content.
 
-- No TypeScript (intentional — keeping it simple)
-- No unit tests
-- No bundler (vendor libs loaded as globals)
-- fs.watch recursive only works on Windows/macOS (not Linux without flag)
-- Large libraries (>5000 prompts) may slow on initial scan
+**CRLF handling:** All reads normalize `.replace(/\r\n/g, '\n')`, all writes use `\n`.
+
+## File Structure
+
+```
+src/main/           # Main process modules (Node.js CJS)
+  main.js           # Entry: window, IPC registration, lifecycle
+  settings.js       # userData/settings.json persistence
+  library.js        # scanLibrary, savePrompt, deletePrompt, importFiles, category tree
+  frontmatter.js    # YAML parse/serialize (js-yaml)
+  history.js        # Run history (userData/history.json)
+  snippets.js       # Reusable text blocks (library/snippets/*.md)
+  variants.js       # Per-prompt variants (library/prompts/{cat}/__variants/*.md)
+  versions.js       # Auto-version snapshots + LCS diff (library/prompts/{cat}/__versions/*.json+md)
+  backup.js         # ZIP via adm-zip
+  watcher.js        # fs.watch recursive + debounce
+src/preload/        # contextBridge (single file)
+src/renderer/       # UI (ES modules, no build step)
+  js/app.js         # Main entry: init, all render functions, event binding
+  js/store.js       # { state, setState, subscribe } pub/sub
+  js/fuzzy.js       # Subsequence scorer: +10/char, +8 consecutive, +5 word-start
+  js/variables.js   # detect/merge/replace engine
+  js/markdown.js    # marked.parse() → DOMPurify.sanitize()
+  styles/           # CSS: base.css (tokens), layout.css (grid), components.css
+  vendor/           # marked.min.js, js-yaml.min.js, purify.min.js
+samples/            # 4 seed prompts (coding, writing, research)
+scripts/            # build.js, convert-icon.js
+assets/             # icon.svg, icon.png, icon.ico
+```
+
+## IPC API (window.api.*)
+
+Settings: `getSettings`, `chooseLibraryFolder`, `setLibraryPath`
+Library: `scanLibrary`, `savePrompt`, `deletePrompt`, `toggleFavorite`, `createCategory`
+Import/Export: `importFiles`, `importFolder`, `importDropped`, `exportPrompt`, `exportLibrary`, `backupLibrary`
+History: `logRun`, `getHistory`, `deleteHistoryEntry`, `clearHistory`
+Snippets: `listSnippets`, `getSnippet`, `saveSnippet`, `deleteSnippet`
+Variants: `listVariants`, `saveVariant`, `deleteVariant`
+Versions: `listVersions`, `getVersionContent`, `restoreVersion`, `computeDiff`
+Composition: `composePrompts`
+Events: `onLibraryChanged` (main → renderer)
+
+## Build Details
+
+electron-builder targets: NSIS installer + unpacked directory. Post-build cleanup removes 54 locales (keep en-US), GPU libs (libGLESv2, libEGL, vk_swiftshader, d3dcompiler_47), ffmpeg, and other unnecessary Electron files. Result: ~78MB installer, ~90MB portable zip.
+
+GitHub Actions workflow (`.github/workflows/build.yml`): builds on push/PR, auto-creates release on `v*` tag push.
