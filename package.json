@@ -16,6 +16,7 @@
     "directories": {
       "output": "dist"
     },
+    "compression": "maximum",
     "files": [
       "src/**/*",
       "samples/**/*"
@@ -38,7 +39,13 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
-    }
+    },
+    "extraFiles": [
+      {
+        "from": "assets/icon.ico",
+        "to": "icon.ico"
+      }
+    ]
   },
   "keywords": [
     "electron",
@@ -50,10 +57,10 @@
   ],
   "author": "Mohammad Karimi",
   "license": "MIT",
-  "homepage": "https://github.com/mkarimi/prompt-manager#readme",
+  "homepage": "https://github.com/karimi-mohammad/prompt-manager#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mkarimi/prompt-manager.git"
+    "url": "https://github.com/karimi-mohammad/prompt-manager.git"
   },
   "devDependencies": {
     "electron": "^33.0.0",
